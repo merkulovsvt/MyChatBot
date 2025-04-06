@@ -1,0 +1,46 @@
+name: nlp_web
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+#  text_generation_inference:
+#    container_name: tgi_for_llama
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              device_ids: [ '0' ]
+#              capabilities:
+#                - gpu
+#    shm_size: 7g
+#    environment:
+#      - HF_TOKEN=${HUGGINGFACE_TOKEN}
+#    ports:
+#      - "8080:8080"
+#    volumes:
+#      - ./data:/data
+#    image: ghcr.io/huggingface/text-generation-inference:3.2.1
+#    command: --model-id meta-llama/Llama-3.2-3B-Instruct --quantize fp8
+
+
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ '0' ]
+              capabilities:
+                - gpu
+    image: ollama/ollama
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+    ports:
+      - "11434:11434"
