@@ -68,8 +68,9 @@ def chat(chat_id):
         chats[chat_id]['messages'].append({"role": "user", "content": user_message})
 
         # Не используем summarization для ответов модели (недостаточно мощностей), будем просто ограничивать
-        assistant_message = get_response_from_messages_hf([chats[chat_id]['messages'][0]] +
-                                                          chats[chat_id]['messages'][1:][-5:])
+        message_history = [chats[chat_id]['messages'][0]] + chats[chat_id]['messages'][1:][-5:]
+        assistant_message = get_response_from_messages_hf(message_history)
+
         assistant_message = markdown.markdown(assistant_message)
         chats[chat_id]['messages'].append({"role": "assistant", "content": assistant_message})
 

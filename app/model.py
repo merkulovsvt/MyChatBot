@@ -5,7 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, AutoMode
 from dotenv import load_dotenv
 from ollama import chat, pull, generate
 
-from app.database import get_rag_response
+from app.rag import get_rag_response
 
 load_dotenv()
 
@@ -80,34 +80,44 @@ load_dotenv()
 #     return output["choices"][0]["message"]["content"]
 
 
-'''Phi-4-mini-instruct + SmartMemory'''
+'''Phi-4-mini-instruct + rag'''
 model_name = 'hf.co/bartowski/microsoft_Phi-4-mini-instruct-GGUF:Q8_0'
+# model_name = 'hf.co/bartowski/phi-4-GGUF:Q5_K_S'
 pull(model=model_name)
 
 rag_detection_prompt = """
-    <user_query>
-    {}
-    </user_query>
+<instructions>
+You are a strict binary classifier for literary queries.
 
-    <instructions>
-    1. Analyze the query between <user_query> tags
-    2. Determine if the query requires factual information retrieval (RAG)
-    3. Consider these RAG indicators:
-       - Requests for specific facts/data
-       - Questions about products/services
-       - Time-sensitive information
-       - References to documents/knowledge
-    4. Exclude general conversation (greetings, opinions, etc.)
-    5. Respond ONLY with TRUE or FALSE!!!
-    </instructions>
-    """
+1. Analyze the user query inside <user_query> tags.
+2. Respond with TRUE ONLY IF:
+   - Query asks about book contents/plot/summary
+   - Query asks about authors/biographical info
+   - Query requests book recommendations
+   - Query asks about literary analysis/themes
+   - Query mentions specific books/authors/genres
+3. Respond with FALSE for:
+   - General conversations
+   - Writing advice
+   - Non-literary topics
+   - Personal opinions
+4. Respond ONLY with TRUE or FALSE in uppercase.
+5. No explanations, punctuation or extra text.
+</instructions>
+
+<user_query>
+{}
+</user_query>
+"""
 
 
-def get_response_from_messages_hf(messages, temperature=0.7):
+def get_response_from_messages_hf(messages):
     rag_decision = generate(
         model=model_name,
         prompt=rag_detection_prompt.format(messages[-1]['content']),
-    )['response']
+    )['response'].strip()
+
+    print(rag_decision)
 
     if rag_decision == 'TRUE':
         output = get_rag_response(messages)
