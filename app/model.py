@@ -80,30 +80,29 @@ load_dotenv()
 #     return output["choices"][0]["message"]["content"]
 
 
-'''Phi-4-mini-instruct + rag'''
+'''Phi-4-mini-instruct + RAG'''
 model_name = 'hf.co/bartowski/microsoft_Phi-4-mini-instruct-GGUF:Q8_0'
-# model_name = 'hf.co/bartowski/phi-4-GGUF:Q5_K_S'
 pull(model=model_name)
 
 rag_detection_prompt = """
-<instructions>
-You are a strict binary classifier for literary queries.
+<instruction>
+Ты — строгий бинарный классификатор литературных запросов. Твоя задача — определить, относится ли запрос к литературной тематике.
 
-1. Analyze the user query inside <user_query> tags.
-2. Respond with TRUE ONLY IF:
-   - Query asks about book contents/plot/summary
-   - Query asks about authors/biographical info
-   - Query requests book recommendations
-   - Query asks about literary analysis/themes
-   - Query mentions specific books/authors/genres
-3. Respond with FALSE for:
-   - General conversations
-   - Writing advice
-   - Non-literary topics
-   - Personal opinions
-4. Respond ONLY with TRUE or FALSE in uppercase.
-5. No explanations, punctuation or extra text.
-</instructions>
+1. Проанализируй текст внутри тегов <user_query>.
+2. Ответь ТОЛЬКО "TRUE" (заглавными буквами), если запрос относится К ХОТЯ БЫ ОДНОЙ из следующих категорий:
+   - Обсуждение содержания, сюжета или краткого пересказа книг
+   - Вопросы о писателях, их жизни, творчестве или биографии
+   - Просьбы порекомендовать книги, авторов или произведения
+   - Литературный анализ: темы, идеи, символы, художественные приёмы
+   - Упоминание конкретных книг, авторов, жанров или литературных направлений
+3. Ответь "FALSE", если запрос:
+   - Общий, абстрактный или не имеет отношения к литературе
+   - О написании текстов, сочинений, эссе, сценариев и т.п.
+   - Относится к другим видам искусства, поп-культуре, философии, психологии и т.д.
+   - Является личным мнением, размышлением, шуткой или разговором "ни о чём"
+4. Отвечай СТРОГО одним словом: TRUE или FALSE (заглавными буквами).
+5. Не добавляй никаких объяснений, знаков препинания или комментариев.
+</instruction>
 
 <user_query>
 {}
@@ -119,7 +118,7 @@ def get_response_from_messages_hf(messages):
 
     print(rag_decision)
 
-    if rag_decision == 'TRUE':
+    if 'TRUE' in rag_decision:
         output = get_rag_response(messages)
     else:
         output = chat(

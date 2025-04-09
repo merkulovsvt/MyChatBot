@@ -14,7 +14,7 @@ author_selector = '.Truncate_truncated__jKdVt'
 read_more_selector = 'Truncate_readMore__F_GTG'
 description_selector = r'\\"html_annotation\\":\\"(.*?)(?<!\\)\\"'
 
-sem = asyncio.Semaphore(20)
+sem = asyncio.Semaphore(30)
 
 
 async def fetch(session, url):
@@ -32,7 +32,6 @@ async def fetch(session, url):
                 escaped_json_str = '{"temp": "' + match.group(1) + '"}'
                 decoded_data = json.loads(escaped_json_str)
                 description = BeautifulSoup(unescape(decoded_data['temp']), 'html.parser').get_text()
-
                 return [author, title, str(description)]
         except Exception as e:
             return None
@@ -59,11 +58,10 @@ def clean_text(text):
     return text.strip()
 
 
-parsed_data = pd.DataFrame(data, columns=['author', 'title', 'description'])
+parsed_data = pd.DataFrame(data, columns=['author', 'title', 'description']).drop_duplicates().dropna()
 parsed_data['description'] = parsed_data['description'].apply(clean_text)
 
 final_data = parsed_data.apply(
-    lambda
-        row: f"Автор - {row['author']}.\n Название книги - {row['title']}.\n Описание книги - {row['description']}",
+    lambda row: f"[Книга] Автор: {row['author']}. Название: {row['title']}. Описание: {row['description']}",
     axis=1)
 final_data.to_csv('parsed_book_data.txt', header=None, index=None, sep=' ', mode='a')

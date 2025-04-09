@@ -29,6 +29,7 @@ usearch = "*"
 langchain-huggingface = "*"
 playwright = "*"
 langchain-ollama = "*"
+tiktoken = "*"
 
 [dev-packages]
 
